@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Rosier chatbot avatar</title>
+  <desc id="desc">A friendly purple detective bird wearing a hat and yellow glasses.</desc>
+  <rect width="512" height="512" rx="96" fill="#f7f7ff"/>
+  <path d="M111 330c-18 60-10 112 18 151 16 22 44 31 69 22l58-22 58 22c25 9 53 0 69-22 28-39 36-91 18-151H111Z" fill="#302e42" stroke="#050505" stroke-width="14"/>
+  <path d="M111 327c14 31 35 51 64 63l-42 38c-16 15-13 43 7 53l60 29 32-108-71-75-50-1Z" fill="#4d4a61" stroke="#050505" stroke-width="14"/>
+  <path d="M401 327c-14 31-35 51-64 63l42 38c16 15 13 43-7 53l-60 29-32-108 71-75 50-1Z" fill="#4d4a61" stroke="#050505" stroke-width="14"/>
+  <path d="M106 219c-2-75 39-132 92-151 38-14 75-14 112 0 53 19 94 76 92 151l-17 72H123l-17-72Z" fill="#f2f2ff" stroke="#050505" stroke-width="14"/>
+  <path d="M119 143c8-59 40-100 79-114 29-10 55 6 68 7 14 1 40-17 69-7 39 14 71 55 79 114H119Z" fill="#4d4a61" stroke="#050505" stroke-width="14"/>
+  <path d="M119 143h274l14 46H105l14-46Z" fill="#302e42" stroke="#050505" stroke-width="14"/>
+  <path d="M103 182h306c28 0 50 22 50 50s-22 50-50 50H103c-28 0-50-22-50-50s22-50 50-50Z" fill="#4d4a61" stroke="#050505" stroke-width="14"/>
+  <path d="M220 182v-35c0-22 18-40 40-40h8c22 0 40 18 40 40v35" fill="#302e42" stroke="#050505" stroke-width="14"/>
+  <circle cx="181" cy="279" r="48" fill="#ffc83d" stroke="#050505" stroke-width="14"/>
+  <circle cx="331" cy="279" r="48" fill="#ffc83d" stroke="#050505" stroke-width="14"/>
+  <path d="M229 274c18-14 36-14 54 0" fill="none" stroke="#050505" stroke-width="12" stroke-linecap="round"/>
+  <rect x="174" y="260" width="14" height="36" rx="7" fill="#050505"/>
+  <rect x="324" y="260" width="14" height="36" rx="7" fill="#050505"/>
+  <path d="M256 329c-42 0-69 25-69 55 0 18 10 29 25 39l30 57c7 14 27 14 34 0l30-57c15-10 25-21 25-39 0-30-27-55-75-55Z" fill="#d9d9f6" stroke="#050505" stroke-width="14"/>
+</svg>
