@@ -6,43 +6,76 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { message } = req.body;
-  const GEMINI_KEY = process.env.GEMINI_API_KEY || process.env.GEMINI_KEY;
+  const message = typeof req.body?.message === 'string' ? req.body.message.trim() : '';
+  const openRouterKey = process.env.OPENROUTER_API_KEY?.trim();
+  const model = process.env.OPENROUTER_MODEL?.trim() || 'meta-llama/llama-3.1-8b-instruct';
 
-  if (!GEMINI_KEY || GEMINI_KEY === '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' || GEMINI_KEY.trim() === '') {
-    return res.status(200).json({
-      reply: "Diagnostics Alert: The environment variable 'GEMINI_API_KEY' is missing, empty, or undefined in your Vercel Project Settings. Please go to Vercel Dashboard -> Settings -> Environment Variables, add a key named exactly 'GEMINI_API_KEY' with your Google AI Studio API key, and then click 'Redeploy' on your Vercel deployment."
+  if (!message) {
+    return res.status(400).json({ error: 'Message is required', reply: 'Please enter a biology question and try again.' });
+  }
+
+  if (!openRouterKey) {
+    return res.status(503).json({
+      error: 'Chat service unavailable',
+      reply: 'The chat service is temporarily unavailable. Please try again later.'
     });
   }
 
   try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system_instruction: {
-            parts: [{ text: 'You are BioEdge AI, a friendly biology assistant for Indian students. Help with biology concepts, IIT JAM/CSIR prep, biotech careers, and AI tools for biology. Keep answers concise and student-friendly. Use simple language and emojis. Always be encouraging.' }]
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${openRouterKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are BioEdge AI, a friendly biology assistant for Indian students. Help with biology concepts, IIT JAM/CSIR prep, biotech careers, and AI tools for biology. Keep answers concise and student-friendly. Use simple language and emojis. Always be encouraging.'
           },
-          contents: [{ parts: [{ text: message }] }]
-        })
-      }
-    );
+          { role: 'user', content: message }
+        ]
+      })
+    });
 
-    const data = await response.json();
-    
-    if (data.error) {
-      const keySnippet = GEMINI_KEY ? `${GEMINI_KEY.substring(0, 6)}...${GEMINI_KEY.substring(GEMINI_KEY.length - 4)}` : 'none';
-      const keyLength = GEMINI_KEY ? GEMINI_KEY.length : 0;
-      return res.status(200).json({ 
-        reply: `Google Gemini API Error: ${data.error.message} (Code: ${data.error.code}).\n\n[System Diagnostics] Vercel is currently reading a key of length ${keyLength} that looks like: '${keySnippet}'. Please check if this matches your Google AI Studio API key exactly. If it is different or empty, it means Vercel is still deploying/caching the old variable value, or you have not completed Step 3 (Redeployment) after updating it.` 
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        return res.status(502).json({
+          error: 'Chat provider authentication failed',
+          reply: 'The chat service could not authenticate with its provider. Please try again later.'
+        });
+      }
+      if (response.status === 404) {
+        return res.status(502).json({
+          error: 'Chat model unavailable',
+          reply: 'The configured chat model is unavailable. Please try again later.'
+        });
+      }
+      if (response.status === 429) {
+        return res.status(429).json({
+          error: 'Chat provider rate limit reached',
+          reply: 'The chat service is busy right now. Please try again in a moment.'
+        });
+      }
+      return res.status(502).json({
+        error: 'Chat provider request failed',
+        reply: 'Sorry, the chat service is temporarily unavailable. Please try again later.'
       });
     }
 
-    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, try again! The response from Gemini was empty.';
+    const data = await response.json();
+    const reply = data.choices?.[0]?.message?.content?.trim();
+    if (!reply) {
+      return res.status(502).json({
+        error: 'Empty chat provider response',
+        reply: 'Sorry, I could not generate a response. Please try again.'
+      });
+    }
+
     res.status(200).json({ reply });
-  } catch (err) {
-    res.status(500).json({ error: 'API error', reply: 'Sorry, connection error to Gemini. Please try again later.' });
+  } catch {
+    res.status(502).json({ error: 'API error', reply: 'Sorry, the chat service is temporarily unavailable. Please try again later.' });
   }
 }
