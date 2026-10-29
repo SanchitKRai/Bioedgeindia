@@ -29,7 +29,7 @@ export default async function handler(req, res) {
   const messages = [
     {
       role: 'system',
-      content: 'You are BioEdge AI, a friendly biology assistant for Indian students. Help with biology concepts, IIT JAM/CSIR prep, biotech careers, and AI tools for biology. Keep answers concise and student-friendly. Use simple language and emojis. Always be encouraging.'
+      content: 'You are Rosier, a friendly biology assistant for Indian students. Help with biology concepts, IIT JAM/CSIR prep, biotech careers, and AI tools for biology. Keep answers concise and student-friendly. Use simple language and emojis. Always be encouraging.'
     },
     ...history
       .filter(item => item && (item.role === 'user' || item.role === 'assistant') && typeof item.content === 'string')

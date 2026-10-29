@@ -365,7 +365,7 @@
   .chat-header-actions { margin-left: auto; display: flex; gap: 8px; }
   .chat-header-btn, .msg-action { background: transparent; border: 1px solid var(--border); color: var(--muted); border-radius: 8px; padding: 6px 9px; font: inherit; font-size: 0.72rem; cursor: pointer; transition: all 0.2s; }
   .chat-header-btn:hover, .msg-action:hover, .msg-action[aria-pressed="true"] { border-color: var(--green); color: var(--green); }
-  .chat-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--green), var(--teal)); display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+  .chat-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: var(--surface); border: 1px solid var(--border); flex-shrink: 0; }
   .chat-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.95rem; }
   .chat-status { font-size: 0.75rem; color: var(--green); display: flex; align-items: center; gap: 5px; }
   .chat-status::before { content: ''; width: 6px; height: 6px; background: var(--green); border-radius: 50%; display: inline-block; animation: blink 1.5s infinite; }
@@ -573,7 +573,7 @@
     <h1>Where <span class="highlight">Biology</span><br>Meets the Future</h1>
     <p class="hero-sub">An independent platform built by Indian life science students, for Indian life science students. Get instant AI research support, design PCR protocols, and discover live national lab vacancies.</p>
     <div class="hero-actions">
-      <a href="#chatbot" class="btn-primary">Ask BioEdge AI 🧬</a>
+      <a href="#chatbot" class="btn-primary">Ask Rosier 🧬</a>
       <a href="/sandbox" class="btn-secondary">Interactive Sandbox 🧪</a>
     </div>
     <div class="hero-stats">
@@ -586,9 +586,9 @@
   <div class="hero-visual" id="chatbot">
     <div class="chat-box" style="width: 100%; border: 1px solid var(--border); box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 30px rgba(0,232,122,0.05);">
       <div class="chat-header">
-        <div class="chat-avatar">🧬</div>
+        <img class="chat-avatar" src="/rosier-avatar.svg" alt="Rosier chatbot avatar">
         <div>
-          <div class="chat-name">BioEdge AI</div>
+          <div class="chat-name">Rosier</div>
           <div class="chat-status">Online — powered by OpenRouter</div>
         </div>
         <div class="chat-header-actions">
@@ -596,7 +596,7 @@
         </div>
       </div>
       <div class="chat-messages" id="chatMessages">
-        <div class="msg-wrap"><div class="msg bot">👋 Hi! I'm BioEdge AI, your personal biology assistant. Ask me anything — CSIR NET prep, CRISPR mechanisms, IIT JAM topics, career advice, or any life science question!</div></div>
+        <div class="msg-wrap"><div class="msg bot">👋 Hi! I'm Rosier, your personal biology assistant. Ask me anything — CSIR NET prep, CRISPR mechanisms, IIT JAM topics, career advice, or any life science question!</div></div>
       </div>
       <div class="chat-suggestions">
         <span class="suggestion-chip" tabindex="0" role="button" onclick="sendSuggestion(this)" onkeypress="if(event.key==='Enter'||event.key===' ') sendSuggestion(this)">Explain CRISPR-Cas9 simply</span>
@@ -1267,7 +1267,7 @@ function createTypingMessage() {
   wrap.className = 'msg-wrap';
   const bubble = document.createElement('div');
   bubble.className = 'msg bot typing';
-  bubble.setAttribute('aria-label', 'BioEdge AI is thinking');
+  bubble.setAttribute('aria-label', 'Rosier is thinking');
   bubble.innerHTML = '<span class="typing-dots"><span></span><span></span><span></span></span>';
   wrap.appendChild(bubble);
   const stop = document.createElement('button');
