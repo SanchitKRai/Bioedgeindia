@@ -1,6 +1,6 @@
 # 🧬 BioEdge India
 
-> **A premium, free, AI-powered computational biology platform for life science students and researchers across India.**
+> **A free, AI-powered computational biology platform for life science students and researchers across India.**
 
 <p align="center">
   <img src="./public/logo.jpg" alt="BioEdge India Logo" width="140" style="border-radius: 50%; box-shadow: 0 4px 20px rgba(0, 232, 122, 0.25);" />
