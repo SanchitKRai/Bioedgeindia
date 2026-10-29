@@ -371,6 +371,24 @@
   .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
   .msg { max-width: 82%; padding: 12px 16px; border-radius: 14px; font-size: 0.875rem; line-height: 1.6; }
   .msg.bot { background: var(--surface2); border: 1px solid var(--border); border-bottom-left-radius: 4px; align-self: flex-start; }
+  .msg.bot > :first-child { margin-top: 0; }
+  .msg.bot > :last-child { margin-bottom: 0; }
+  .msg.bot h1, .msg.bot h2, .msg.bot h3, .msg.bot h4 { font-family: 'Syne', sans-serif; color: var(--accent); line-height: 1.25; margin: 1.1em 0 0.45em; }
+  .msg.bot h1 { font-size: 1.35rem; }
+  .msg.bot h2 { font-size: 1.2rem; }
+  .msg.bot h3 { font-size: 1.05rem; }
+  .msg.bot h4 { font-size: 0.95rem; }
+  .msg.bot p { margin: 0 0 0.85em; }
+  .msg.bot ul, .msg.bot ol { margin: 0.35em 0 0.9em 1.35em; padding: 0; }
+  .msg.bot li { margin: 0.3em 0; padding-left: 0.15em; }
+  .msg.bot blockquote { border-left: 3px solid var(--green); color: var(--muted); margin: 0.8em 0; padding: 0.15em 0 0.15em 1em; }
+  .msg.bot code { background: rgba(0,0,0,0.28); border: 1px solid var(--border); border-radius: 4px; color: var(--accent); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.86em; padding: 0.12em 0.35em; overflow-wrap: anywhere; }
+  .msg.bot pre { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; margin: 0.9em 0; max-width: 100%; overflow-x: auto; padding: 0.85em 1em; }
+  .msg.bot pre code { background: none; border: 0; color: var(--text); display: block; padding: 0; white-space: pre; overflow-wrap: normal; }
+  .msg.bot table { border-collapse: collapse; display: block; margin: 0.9em 0; max-width: 100%; overflow-x: auto; width: max-content; }
+  .msg.bot th, .msg.bot td { border: 1px solid var(--border); padding: 0.45em 0.65em; text-align: left; }
+  .msg.bot th { background: rgba(0,232,122,0.1); color: var(--accent); font-weight: 500; }
+  .msg.bot a { color: var(--green); overflow-wrap: anywhere; text-decoration: underline; text-underline-offset: 2px; }
   .msg.user { background: rgba(0,232,122,0.15); border: 1px solid rgba(0,232,122,0.2); border-bottom-right-radius: 4px; align-self: flex-end; color: var(--accent); }
   .msg.typing { opacity: 0.6; }
   .chat-input-row { padding: 16px; border-top: 1px solid var(--border); display: flex; gap: 10px; }
@@ -458,6 +476,8 @@
     .newsletter-form { flex-direction: column; }
     footer { flex-direction: column; gap: 12px; text-align: center; padding: 28px 20px; }
     .hero-stats { gap: 24px; }
+    .msg { max-width: 92%; }
+    .chat-messages { padding: 18px; }
   }
 
   /* DIRECTORY FILTERS & SEARCH */
@@ -976,6 +996,186 @@
 })();
 
 // ===== AI CHATBOT =====
+function appendInlineMarkdown(parent, value) {
+  const tokenPattern = /(`[^`]*`|\*\*[^*]+\*\*|__[^_]+__|\*[^*]+\*|_[^_]+_|\[[^\]]+\]\((?:https?:\/\/|mailto:)[^)]+\))/;
+  let remaining = value;
+
+  while (remaining) {
+    const match = remaining.match(tokenPattern);
+    if (!match) {
+      parent.appendChild(document.createTextNode(remaining));
+      break;
+    }
+
+    if (match.index > 0) {
+      parent.appendChild(document.createTextNode(remaining.slice(0, match.index)));
+    }
+
+    const token = match[0];
+    if (token[0] === '`') {
+      const code = document.createElement('code');
+      code.textContent = token.slice(1, -1);
+      parent.appendChild(code);
+    } else if (token[0] === '[') {
+      const linkMatch = token.match(/^\[([^\]]+)\]\(((?:https?:\/\/|mailto:)[^)]+)\)$/);
+      if (linkMatch) {
+        const link = document.createElement('a');
+        link.href = linkMatch[2];
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        appendInlineMarkdown(link, linkMatch[1]);
+        parent.appendChild(link);
+      } else {
+        parent.appendChild(document.createTextNode(token));
+      }
+    } else {
+      const isStrong = token.startsWith('**') || token.startsWith('__');
+      const element = document.createElement(isStrong ? 'strong' : 'em');
+      appendInlineMarkdown(element, token.slice(isStrong ? 2 : 1, -(isStrong ? 2 : 1)));
+      parent.appendChild(element);
+    }
+    remaining = remaining.slice(match.index + token.length);
+  }
+}
+
+function appendMarkdownLine(parent, line) {
+  appendInlineMarkdown(parent, line);
+}
+
+function splitTableRow(line) {
+  return line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(cell => cell.trim());
+}
+
+function isTableDivider(line) {
+  return splitTableRow(line).length > 0 &&
+    splitTableRow(line).every(cell => /^:?-{3,}:?$/.test(cell));
+}
+
+function renderMarkdown(markdown) {
+  const fragment = document.createDocumentFragment();
+  const lines = String(markdown || '').replace(/\r\n?/g, '\n').split('\n');
+  let index = 0;
+
+  while (index < lines.length) {
+    const line = lines[index];
+    if (!line.trim()) {
+      index++;
+      continue;
+    }
+
+    const fence = line.match(/^ {0,3}(```+|~~~+)\s*([\w-]*)\s*$/);
+    if (fence) {
+      const codeLines = [];
+      index++;
+      while (index < lines.length && !new RegExp(`^ {0,3}${fence[1][0]}{${fence[1].length},}\\s*$`).test(lines[index])) {
+        codeLines.push(lines[index]);
+        index++;
+      }
+      if (index < lines.length) index++;
+      const pre = document.createElement('pre');
+      const code = document.createElement('code');
+      if (fence[2]) code.className = `language-${fence[2]}`;
+      code.textContent = codeLines.join('\n');
+      pre.appendChild(code);
+      fragment.appendChild(pre);
+      continue;
+    }
+
+    const heading = line.match(/^ {0,3}(#{1,4})\s+(.+?)\s*#*\s*$/);
+    if (heading) {
+      const element = document.createElement(`h${heading[1].length}`);
+      appendMarkdownLine(element, heading[2]);
+      fragment.appendChild(element);
+      index++;
+      continue;
+    }
+
+    if (/^ {0,3}>\s?/.test(line)) {
+      const quoteLines = [];
+      while (index < lines.length && /^ {0,3}>\s?/.test(lines[index])) {
+        quoteLines.push(lines[index].replace(/^ {0,3}>\s?/, ''));
+        index++;
+      }
+      const quote = document.createElement('blockquote');
+      quoteLines.forEach((quoteLine, quoteIndex) => {
+        if (quoteIndex) quote.appendChild(document.createElement('br'));
+        appendMarkdownLine(quote, quoteLine);
+      });
+      fragment.appendChild(quote);
+      continue;
+    }
+
+    if (index + 1 < lines.length && line.includes('|') && isTableDivider(lines[index + 1])) {
+      const headers = splitTableRow(line);
+      const table = document.createElement('table');
+      const thead = document.createElement('thead');
+      const headerRow = document.createElement('tr');
+      headers.forEach(header => {
+        const cell = document.createElement('th');
+        appendMarkdownLine(cell, header);
+        headerRow.appendChild(cell);
+      });
+      thead.appendChild(headerRow);
+      table.appendChild(thead);
+      const tbody = document.createElement('tbody');
+      index += 2;
+      while (index < lines.length && lines[index].includes('|') && lines[index].trim()) {
+        const row = document.createElement('tr');
+        splitTableRow(lines[index]).forEach(value => {
+          const cell = document.createElement('td');
+          appendMarkdownLine(cell, value);
+          row.appendChild(cell);
+        });
+        tbody.appendChild(row);
+        index++;
+      }
+      table.appendChild(tbody);
+      fragment.appendChild(table);
+      continue;
+    }
+
+    const listItem = line.match(/^(\s*)([-*+]|\d+[.)])\s+(.+)$/);
+    if (listItem) {
+      const ordered = /^\d/.test(listItem[2]);
+      const list = document.createElement(ordered ? 'ol' : 'ul');
+      if (ordered) list.start = parseInt(listItem[2], 10);
+      while (index < lines.length) {
+        const itemMatch = lines[index].match(/^(\s*)([-*+]|\d+[.)])\s+(.+)$/);
+        if (!itemMatch || /^\d/.test(itemMatch[2]) !== ordered) break;
+        const item = document.createElement('li');
+        appendMarkdownLine(item, itemMatch[3]);
+        list.appendChild(item);
+        index++;
+      }
+      fragment.appendChild(list);
+      continue;
+    }
+
+    const paragraphLines = [line];
+    index++;
+    while (index < lines.length && lines[index].trim() &&
+      !/^ {0,3}(#{1,4})\s+/.test(lines[index]) &&
+      !/^ {0,3}(?:```+|~~~+)/.test(lines[index]) &&
+      !/^ {0,3}>\s?/.test(lines[index]) &&
+      !/^(\s*)([-*+]|\d+[.)])\s+/.test(lines[index])) {
+      paragraphLines.push(lines[index]);
+      index++;
+    }
+    const paragraph = document.createElement('p');
+    paragraphLines.forEach((paragraphLine, lineIndex) => {
+      if (lineIndex) paragraph.appendChild(document.createElement('br'));
+      appendMarkdownLine(paragraph, paragraphLine.replace(/ {2}$/, ''));
+    });
+    fragment.appendChild(paragraph);
+  }
+
+  return fragment;
+}
+
+function setAssistantMessage(element, content) {
+  element.replaceChildren(renderMarkdown(content));
+}
+
 async function sendMessage(){
   const input=document.getElementById('chatInput');
   const btn=document.getElementById('sendBtn');
@@ -1005,7 +1205,7 @@ async function sendMessage(){
     tm.remove();
     const bm=document.createElement('div');
     bm.className='msg bot';
-    bm.textContent=data.reply||'Sorry, I couldn\'t process that. Please try again.';
+    setAssistantMessage(bm, data.reply||'Sorry, I couldn\'t process that. Please try again.');
     msgs.appendChild(bm);
   }catch(e){
     tm.remove();
