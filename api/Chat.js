@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   const { message } = req.body;
   const GEMINI_KEY = process.env.GEMINI_API_KEY || process.env.GEMINI_KEY;
 
-  if (!GEMINI_KEY || GEMINI_KEY === 'YOUR_GEMINI_API_KEY_HERE' || GEMINI_KEY.trim() === '') {
+  if (!GEMINI_KEY || GEMINI_KEY === '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' || GEMINI_KEY.trim() === '') {
     return res.status(200).json({
       reply: "Diagnostics Alert: The environment variable 'GEMINI_API_KEY' is missing, empty, or undefined in your Vercel Project Settings. Please go to Vercel Dashboard -> Settings -> Environment Variables, add a key named exactly 'GEMINI_API_KEY' with your Google AI Studio API key, and then click 'Redeploy' on your Vercel deployment."
     });
